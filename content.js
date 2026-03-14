@@ -10,13 +10,13 @@ const MODULES = [
   {
     id: "kotoutuminen",
     icon: "🏠",
-    title: { fi: "Kotoutuminen", en: "Integration" },
-    desc: { fi: "Mitä kotoutuminen tarkoittaa? Suomen sijainti, sää ja yhteiskunta.", en: "What does integration mean? Finland's location, weather, and society." },
+    title: { fi: "Kotoutuminen", en: "Integration", ru: "Интеграция" },
+    desc: { fi: "Mitä kotoutuminen tarkoittaa? Suomen sijainti, sää ja yhteiskunta.", en: "What does integration mean? Finland's location, weather, and society.", ru: "Что означает интеграция? Расположение Финляндии, погода и общество." },
     color: "#58cc02",
     lessons: [
       {
         id: "koto-1",
-        title: { fi: "Mitä kotoutuminen tarkoittaa?", en: "What does integration mean?" },
+        title: { fi: "Mitä kotoutuminen tarkoittaa?", en: "What does integration mean?", ru: "Что означает интеграция?" },
         icon: "📋",
         exercises: [
           {

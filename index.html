@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suomi Oppi — Yhteiskuntaorientaatio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top bar -->
+        <header id="top-bar">
+            <div class="top-bar-left">
+                <button id="back-btn" class="icon-btn hidden" onclick="goBack()">←</button>
+                <h1 id="app-title" onclick="goHome()">Suomi Oppi</h1>
+            </div>
+            <div class="top-bar-right">
+                <div id="streak-display" class="hidden" title="Päiväputki / Daily streak">🔥 <span id="streak-count">0</span></div>
+                <div id="xp-display" class="hidden" title="Kokemuspisteet / XP">⭐ <span id="xp-count">0</span></div>
+                <div id="daily-goal-display" class="hidden" title="Päivätavoite / Daily goal">
+                    <svg id="daily-goal-ring" width="32" height="32" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+                        <circle id="daily-goal-circle" cx="18" cy="18" r="15" fill="none" stroke="var(--green)" stroke-width="3"
+                            stroke-dasharray="94.2" stroke-dashoffset="94.2" stroke-linecap="round" transform="rotate(-90 18 18)"/>
+                    </svg>
+                </div>
+                <button id="lang-toggle" onclick="toggleLanguage()" title="Vaihda kieli / Toggle language">FI | EN</button>
+                <button id="user-menu-btn" class="icon-btn hidden" onclick="toggleUserMenu()">👤</button>
+            </div>
+        </header>
+
+        <!-- User dropdown menu -->
+        <div id="user-menu" class="dropdown-menu hidden">
+            <div id="user-menu-header"></div>
+            <button onclick="showView('vocab'); closeUserMenu()" data-fi="Sanasto" data-en="Vocabulary">Sanasto</button>
+            <button onclick="showPracticeTestIntro(); closeUserMenu()" data-fi="Harjoituskoe" data-en="Practice Test">Harjoituskoe</button>
+            <button onclick="showView('stats'); closeUserMenu()" data-fi="Tilastot" data-en="Statistics">Tilastot</button>
+            <button onclick="showView('achievements-view'); closeUserMenu()" data-fi="Saavutukset" data-en="Achievements">Saavutukset</button>
+            <button onclick="showView('review'); closeUserMenu()" data-fi="Kertaus" data-en="Review">Kertaus</button>
+            <button onclick="showView('bookmarks-view'); closeUserMenu()" data-fi="Kirjanmerkit" data-en="Bookmarks">Kirjanmerkit</button>
+            <button onclick="showView('leaderboard'); closeUserMenu()" data-fi="Tulostaulukko" data-en="Leaderboard">Tulostaulukko</button>
+            <button onclick="showView('settings'); closeUserMenu()" data-fi="Asetukset" data-en="Settings">Asetukset</button>
+            <hr>
+            <button onclick="doLogout()" class="danger-btn" data-fi="Kirjaudu ulos" data-en="Log out">Kirjaudu ulos</button>
+        </div>
+
+        <!-- Progress bar (shown during lessons) -->
+        <div id="lesson-progress-bar" class="hidden">
+            <div id="lesson-progress-fill"></div>
+        </div>
+
+        <!-- Main views -->
+        <main id="main-content">
+            <!-- Auth view -->
+            <div id="auth-view" class="view">
+                <div class="auth-container">
+                    <div class="auth-logo">🇫🇮</div>
+                    <h2>Suomi Oppi</h2>
+                    <p class="auth-subtitle" data-fi="Opi suomalaista yhteiskuntaa" data-en="Learn about Finnish society">Opi suomalaista yhteiskuntaa</p>
+
+                    <div id="auth-tabs">
+                        <button class="auth-tab active" onclick="switchAuthTab('login')" data-fi="Kirjaudu" data-en="Log in">Kirjaudu</button>
+                        <button class="auth-tab" onclick="switchAuthTab('register')" data-fi="Rekisteröidy" data-en="Register">Rekisteröidy</button>
+                    </div>
+
+                    <form id="login-form" class="auth-form" onsubmit="doLogin(event)">
+                        <input type="text" id="login-username" placeholder="Käyttäjänimi / Username" required autocomplete="username">
+                        <input type="password" id="login-password" placeholder="Salasana / Password" required autocomplete="current-password">
+                        <button type="submit" class="btn btn-primary btn-full" data-fi="Kirjaudu sisään" data-en="Log in">Kirjaudu sisään</button>
+                    </form>
+
+                    <form id="register-form" class="auth-form hidden" onsubmit="doRegister(event)">
+                        <input type="text" id="reg-display" placeholder="Nimi / Display name" required>
+                        <input type="text" id="reg-username" placeholder="Käyttäjänimi / Username (min 3)" required minlength="3" autocomplete="username">
+                        <input type="password" id="reg-password" placeholder="Salasana / Password (min 6)" required minlength="6" autocomplete="new-password">
+                        <button type="submit" class="btn btn-primary btn-full" data-fi="Luo tili" data-en="Create account">Luo tili</button>
+                    </form>
+
+                    <div id="auth-error" class="auth-error hidden"></div>
+
+                    <button class="btn-link" onclick="skipAuth()" data-fi="Jatka ilman tiliä" data-en="Continue without account">Jatka ilman tiliä</button>
+                </div>
+            </div>
+
+            <!-- Home / Module selection -->
+            <div id="home-view" class="view">
+                <div class="home-header">
+                    <h2 data-fi="Opintopolkusi" data-en="Your Learning Path">Opintopolkusi</h2>
+                    <p data-fi="Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!" data-en="Target level: B1 — Learn about Finnish society!">Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!</p>
+                    <!-- Daily goal progress -->
+                    <div id="daily-goal-banner" class="daily-goal-banner hidden">
+                        <div class="daily-goal-info">
+                            <span data-fi="Päivätavoite" data-en="Daily goal">Päivätavoite</span>
+                            <strong id="daily-goal-text">0 / 50 XP</strong>
+                        </div>
+                        <div class="daily-goal-bar">
+                            <div id="daily-goal-fill"></div>
+                        </div>
+                    </div>
+                    <div id="overall-progress">
+                        <div id="overall-progress-fill"></div>
+                    </div>
+                    <span id="overall-progress-text"></span>
+                </div>
+
+                <!-- Quick actions -->
+                <div id="quick-actions" class="quick-actions hidden">
+                    <button class="quick-btn" onclick="showView('vocab')">
+                        <span class="quick-icon">📝</span>
+                        <span data-fi="Sanasto" data-en="Vocab">Sanasto</span>
+                    </button>
+                    <button class="quick-btn" onclick="showPracticeTestIntro()">
+                        <span class="quick-icon">🎯</span>
+                        <span data-fi="Koe" data-en="Test">Koe</span>
+                    </button>
+                    <button class="quick-btn" onclick="startReviewSession()">
+                        <span class="quick-icon">🔄</span>
+                        <span data-fi="Kertaus" data-en="Review">Kertaus</span>
+                        <span id="review-badge" class="badge hidden">0</span>
+                    </button>
+                    <button class="quick-btn" onclick="showView('stats')">
+                        <span class="quick-icon">📊</span>
+                        <span data-fi="Tilastot" data-en="Stats">Tilastot</span>
+                    </button>
+                </div>
+
+                <div id="modules-grid"></div>
+            </div>
+
+            <!-- Lesson selection within module -->
+            <div id="module-view" class="view">
+                <div class="module-header">
+                    <h2 id="module-title"></h2>
+                    <p id="module-desc"></p>
+                    <div id="module-progress-container">
+                        <div id="module-progress">
+                            <div id="module-progress-fill"></div>
+                        </div>
+                        <span id="module-progress-text"></span>
+                    </div>
+                </div>
+                <div id="lessons-list"></div>
+            </div>
+
+            <!-- Lesson / Exercise view -->
+            <div id="lesson-view" class="view">
+                <div id="exercise-container">
+                    <!-- Dynamically filled -->
+                </div>
+            </div>
+
+            <!-- Lesson complete view -->
+            <div id="complete-view" class="view">
+                <div class="complete-content">
+                    <div class="complete-icon">🎉</div>
+                    <h2 data-fi="Hienoa!" data-en="Great job!">Hienoa!</h2>
+                    <div id="complete-stats"></div>
+                    <div id="new-achievements-display"></div>
+                    <button class="btn btn-primary" onclick="goToModule()" data-fi="Jatka" data-en="Continue">Jatka</button>
+                </div>
+            </div>
+
+            <!-- Stats view -->
+            <div id="stats-view" class="view">
+                <h2 data-fi="Tilastot" data-en="Statistics">Tilastot</h2>
+                <div id="stats-content"></div>
+            </div>
+
+            <!-- Achievements view -->
+            <div id="achievements-view-view" class="view">
+                <h2 data-fi="Saavutukset" data-en="Achievements">Saavutukset</h2>
+                <div id="achievements-content"></div>
+            </div>
+
+            <!-- Review view -->
+            <div id="review-view" class="view">
+                <div class="review-header">
+                    <h2 data-fi="Kertaus" data-en="Review">Kertaus</h2>
+                    <p data-fi="Harjoittele vaikeita tehtäviä uudelleen" data-en="Practice difficult exercises again">Harjoittele vaikeita tehtäviä uudelleen</p>
+                </div>
+                <div id="review-content"></div>
+            </div>
+
+            <!-- Bookmarks view -->
+            <div id="bookmarks-view-view" class="view">
+                <h2 data-fi="Kirjanmerkit" data-en="Bookmarks">Kirjanmerkit</h2>
+                <div id="bookmarks-content"></div>
+            </div>
+
+            <!-- Leaderboard view -->
+            <div id="leaderboard-view" class="view">
+                <h2 data-fi="Tulostaulukko" data-en="Leaderboard">Tulostaulukko</h2>
+                <div id="leaderboard-content"></div>
+            </div>
+
+            <!-- Settings view -->
+            <div id="settings-view" class="view">
+                <h2 data-fi="Asetukset" data-en="Settings">Asetukset</h2>
+                <div id="settings-content"></div>
+            </div>
+
+            <!-- Vocabulary flashcards view -->
+            <div id="vocab-view" class="view">
+                <div class="vocab-header">
+                    <h2 data-fi="Sanasto" data-en="Vocabulary">Sanasto</h2>
+                    <p data-fi="Opi tärkeimmät käsitteet kansalaisuuskokeeseen" data-en="Learn key concepts for the citizenship test">Opi tärkeimmät käsitteet kansalaisuuskokeeseen</p>
+                    <div id="vocab-stats-bar"></div>
+                </div>
+                <div id="vocab-content"></div>
+            </div>
+
+            <!-- Vocab practice view -->
+            <div id="vocab-practice-view" class="view">
+                <div id="vocab-practice-content"></div>
+            </div>
+
+            <!-- Practice test view -->
+            <div id="practice-test-view" class="view">
+                <div id="practice-test-content"></div>
+            </div>
+
+            <!-- Practice test results view -->
+            <div id="test-results-view" class="view">
+                <div id="test-results-content"></div>
+            </div>
+
+            <!-- Tips/theory view (shown before lesson) -->
+            <div id="tips-view" class="view">
+                <div id="tips-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Achievement toast -->
+    <div id="achievement-toast" class="achievement-toast hidden">
+        <div class="achievement-toast-icon"></div>
+        <div class="achievement-toast-text"></div>
+    </div>
+
+    <script src="content.js"></script>
+    <script src="vocabulary.js"></script>
+    <script src="tips.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

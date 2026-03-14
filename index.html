@@ -24,7 +24,7 @@
                             stroke-dasharray="94.2" stroke-dashoffset="94.2" stroke-linecap="round" transform="rotate(-90 18 18)"/>
                     </svg>
                 </div>
-                <button id="lang-toggle" onclick="toggleLanguage()" title="Vaihda kieli / Toggle language">FI | EN</button>
+                <button id="lang-toggle" onclick="toggleLanguage()" title="Vaihda kieli / Toggle language / Сменить язык">FI</button>
                 <button id="user-menu-btn" class="icon-btn hidden" onclick="toggleUserMenu()">👤</button>
             </div>
         </header>
@@ -32,16 +32,16 @@
         <!-- User dropdown menu -->
         <div id="user-menu" class="dropdown-menu hidden">
             <div id="user-menu-header"></div>
-            <button onclick="showView('vocab'); closeUserMenu()" data-fi="Sanasto" data-en="Vocabulary">Sanasto</button>
-            <button onclick="showPracticeTestIntro(); closeUserMenu()" data-fi="Harjoituskoe" data-en="Practice Test">Harjoituskoe</button>
-            <button onclick="showView('stats'); closeUserMenu()" data-fi="Tilastot" data-en="Statistics">Tilastot</button>
-            <button onclick="showView('achievements-view'); closeUserMenu()" data-fi="Saavutukset" data-en="Achievements">Saavutukset</button>
-            <button onclick="showView('review'); closeUserMenu()" data-fi="Kertaus" data-en="Review">Kertaus</button>
-            <button onclick="showView('bookmarks-view'); closeUserMenu()" data-fi="Kirjanmerkit" data-en="Bookmarks">Kirjanmerkit</button>
-            <button onclick="showView('leaderboard'); closeUserMenu()" data-fi="Tulostaulukko" data-en="Leaderboard">Tulostaulukko</button>
-            <button onclick="showView('settings'); closeUserMenu()" data-fi="Asetukset" data-en="Settings">Asetukset</button>
+            <button onclick="showView('vocab'); closeUserMenu()" data-fi="Sanasto" data-en="Vocabulary" data-ru="Словарь">Sanasto</button>
+            <button onclick="showPracticeTestIntro(); closeUserMenu()" data-fi="Harjoituskoe" data-en="Practice Test" data-ru="Пробный тест">Harjoituskoe</button>
+            <button onclick="showView('stats'); closeUserMenu()" data-fi="Tilastot" data-en="Statistics" data-ru="Статистика">Tilastot</button>
+            <button onclick="showView('achievements-view'); closeUserMenu()" data-fi="Saavutukset" data-en="Achievements" data-ru="Достижения">Saavutukset</button>
+            <button onclick="showView('review'); closeUserMenu()" data-fi="Kertaus" data-en="Review" data-ru="Повторение">Kertaus</button>
+            <button onclick="showView('bookmarks-view'); closeUserMenu()" data-fi="Kirjanmerkit" data-en="Bookmarks" data-ru="Закладки">Kirjanmerkit</button>
+            <button onclick="showView('leaderboard'); closeUserMenu()" data-fi="Tulostaulukko" data-en="Leaderboard" data-ru="Рейтинг">Tulostaulukko</button>
+            <button onclick="showView('settings'); closeUserMenu()" data-fi="Asetukset" data-en="Settings" data-ru="Настройки">Asetukset</button>
             <hr>
-            <button onclick="doLogout()" class="danger-btn" data-fi="Kirjaudu ulos" data-en="Log out">Kirjaudu ulos</button>
+            <button onclick="doLogout()" class="danger-btn" data-fi="Kirjaudu ulos" data-en="Log out" data-ru="Выйти">Kirjaudu ulos</button>
         </div>
 
         <!-- Progress bar (shown during lessons) -->
@@ -56,57 +56,57 @@
                 <div class="auth-container">
                     <div class="auth-logo">🇫🇮</div>
                     <h2>Suomi Oppi</h2>
-                    <p class="auth-subtitle" data-fi="Opi suomalaista yhteiskuntaa" data-en="Learn about Finnish society">Opi suomalaista yhteiskuntaa</p>
+                    <p class="auth-subtitle" data-fi="Opi suomalaista yhteiskuntaa" data-en="Learn about Finnish society" data-ru="Изучай финское общество">Opi suomalaista yhteiskuntaa</p>
 
                     <div id="auth-tabs">
-                        <button class="auth-tab active" onclick="switchAuthTab('login')" data-fi="Kirjaudu" data-en="Log in">Kirjaudu</button>
-                        <button class="auth-tab" onclick="switchAuthTab('register')" data-fi="Rekisteröidy" data-en="Register">Rekisteröidy</button>
+                        <button class="auth-tab active" onclick="switchAuthTab('login')" data-fi="Kirjaudu" data-en="Log in" data-ru="Войти">Kirjaudu</button>
+                        <button class="auth-tab" onclick="switchAuthTab('register')" data-fi="Rekisteröidy" data-en="Register" data-ru="Регистрация">Rekisteröidy</button>
                     </div>
 
                     <div id="auth-error" class="auth-error hidden"></div>
 
                     <form id="login-form" class="auth-form" onsubmit="doLogin(event)">
                         <div class="input-group">
-                            <label for="login-username">Käyttäjänimi / Username</label>
+                            <label for="login-username">Käyttäjänimi / Username / Имя пользователя</label>
                             <input type="text" id="login-username" placeholder="esim. matti123" required autocomplete="username">
                         </div>
                         <div class="input-group">
-                            <label for="login-password">Salasana / Password</label>
+                            <label for="login-password">Salasana / Password / Пароль</label>
                             <input type="password" id="login-password" placeholder="********" required autocomplete="current-password">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-full">Kirjaudu sisään / Log in</button>
+                        <button type="submit" class="btn btn-primary btn-full">Kirjaudu / Log in / Войти</button>
                     </form>
 
                     <form id="register-form" class="auth-form hidden" onsubmit="doRegister(event)">
                         <div class="input-group">
-                            <label for="reg-display">Nimi / Your name</label>
+                            <label for="reg-display">Nimi / Your name / Ваше имя</label>
                             <input type="text" id="reg-display" placeholder="esim. Matti Meikäläinen" required>
                         </div>
                         <div class="input-group">
-                            <label for="reg-username">Käyttäjänimi / Username <span class="input-hint">(vähintään 3 merkkiä)</span></label>
+                            <label for="reg-username">Käyttäjänimi / Username <span class="input-hint">(min 3)</span></label>
                             <input type="text" id="reg-username" placeholder="esim. matti123" required minlength="3" autocomplete="username">
                         </div>
                         <div class="input-group">
-                            <label for="reg-password">Salasana / Password <span class="input-hint">(vähintään 6 merkkiä)</span></label>
+                            <label for="reg-password">Salasana / Password / Пароль <span class="input-hint">(min 6)</span></label>
                             <input type="password" id="reg-password" placeholder="********" required minlength="6" autocomplete="new-password">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-full">Luo tili / Create account</button>
+                        <button type="submit" class="btn btn-primary btn-full">Luo tili / Create account / Создать аккаунт</button>
                     </form>
 
-                    <div class="auth-divider"><span>tai / or</span></div>
-                    <button class="btn btn-secondary btn-full" onclick="skipAuth()" style="margin-top:0">Jatka ilman tiliä / Continue without account</button>
+                    <div class="auth-divider"><span>tai / or / или</span></div>
+                    <button class="btn btn-secondary btn-full" onclick="skipAuth()" style="margin-top:0">Jatka ilman tiliä / Continue without account / Без аккаунта</button>
                 </div>
             </div>
 
             <!-- Home / Module selection -->
             <div id="home-view" class="view">
                 <div class="home-header">
-                    <h2 data-fi="Opintopolkusi" data-en="Your Learning Path">Opintopolkusi</h2>
-                    <p data-fi="Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!" data-en="Target level: B1 — Learn about Finnish society!">Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!</p>
+                    <h2 data-fi="Opintopolkusi" data-en="Your Learning Path" data-ru="Ваш учебный путь">Opintopolkusi</h2>
+                    <p data-fi="Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!" data-en="Target level: B1 — Learn about Finnish society!" data-ru="Целевой уровень: B1 — Изучай финское общество!">Tavoitetaso: B1 — Opi suomalaista yhteiskuntaa!</p>
                     <!-- Daily goal progress -->
                     <div id="daily-goal-banner" class="daily-goal-banner hidden">
                         <div class="daily-goal-info">
-                            <span data-fi="Päivätavoite" data-en="Daily goal">Päivätavoite</span>
+                            <span data-fi="Päivätavoite" data-en="Daily goal" data-ru="Дневная цель">Päivätavoite</span>
                             <strong id="daily-goal-text">0 / 50 XP</strong>
                         </div>
                         <div class="daily-goal-bar">
@@ -123,20 +123,20 @@
                 <div id="quick-actions" class="quick-actions hidden">
                     <button class="quick-btn" onclick="showView('vocab')">
                         <span class="quick-icon">📝</span>
-                        <span data-fi="Sanasto" data-en="Vocab">Sanasto</span>
+                        <span data-fi="Sanasto" data-en="Vocab" data-ru="Словарь">Sanasto</span>
                     </button>
                     <button class="quick-btn" onclick="showPracticeTestIntro()">
                         <span class="quick-icon">🎯</span>
-                        <span data-fi="Koe" data-en="Test">Koe</span>
+                        <span data-fi="Koe" data-en="Test" data-ru="Тест">Koe</span>
                     </button>
                     <button class="quick-btn" onclick="startReviewSession()">
                         <span class="quick-icon">🔄</span>
-                        <span data-fi="Kertaus" data-en="Review">Kertaus</span>
+                        <span data-fi="Kertaus" data-en="Review" data-ru="Повтор">Kertaus</span>
                         <span id="review-badge" class="badge hidden">0</span>
                     </button>
                     <button class="quick-btn" onclick="showView('stats')">
                         <span class="quick-icon">📊</span>
-                        <span data-fi="Tilastot" data-en="Stats">Tilastot</span>
+                        <span data-fi="Tilastot" data-en="Stats" data-ru="Статистика">Tilastot</span>
                     </button>
                 </div>
 
@@ -169,7 +169,7 @@
             <div id="complete-view" class="view">
                 <div class="complete-content">
                     <div class="complete-icon">🎉</div>
-                    <h2 data-fi="Hienoa!" data-en="Great job!">Hienoa!</h2>
+                    <h2 data-fi="Hienoa!" data-en="Great job!" data-ru="Отлично!">Hienoa!</h2>
                     <div id="complete-stats"></div>
                     <div id="new-achievements-display"></div>
                     <div id="complete-actions" class="complete-actions"></div>
@@ -178,48 +178,48 @@
 
             <!-- Stats view -->
             <div id="stats-view" class="view">
-                <h2 data-fi="Tilastot" data-en="Statistics">Tilastot</h2>
+                <h2 data-fi="Tilastot" data-en="Statistics" data-ru="Статистика">Tilastot</h2>
                 <div id="stats-content"></div>
             </div>
 
             <!-- Achievements view -->
             <div id="achievements-view-view" class="view">
-                <h2 data-fi="Saavutukset" data-en="Achievements">Saavutukset</h2>
+                <h2 data-fi="Saavutukset" data-en="Achievements" data-ru="Достижения">Saavutukset</h2>
                 <div id="achievements-content"></div>
             </div>
 
             <!-- Review view -->
             <div id="review-view" class="view">
                 <div class="review-header">
-                    <h2 data-fi="Kertaus" data-en="Review">Kertaus</h2>
-                    <p data-fi="Harjoittele vaikeita tehtäviä uudelleen" data-en="Practice difficult exercises again">Harjoittele vaikeita tehtäviä uudelleen</p>
+                    <h2 data-fi="Kertaus" data-en="Review" data-ru="Повторение">Kertaus</h2>
+                    <p data-fi="Harjoittele vaikeita tehtäviä uudelleen" data-en="Practice difficult exercises again" data-ru="Повторите сложные упражнения">Harjoittele vaikeita tehtäviä uudelleen</p>
                 </div>
                 <div id="review-content"></div>
             </div>
 
             <!-- Bookmarks view -->
             <div id="bookmarks-view-view" class="view">
-                <h2 data-fi="Kirjanmerkit" data-en="Bookmarks">Kirjanmerkit</h2>
+                <h2 data-fi="Kirjanmerkit" data-en="Bookmarks" data-ru="Закладки">Kirjanmerkit</h2>
                 <div id="bookmarks-content"></div>
             </div>
 
             <!-- Leaderboard view -->
             <div id="leaderboard-view" class="view">
-                <h2 data-fi="Tulostaulukko" data-en="Leaderboard">Tulostaulukko</h2>
+                <h2 data-fi="Tulostaulukko" data-en="Leaderboard" data-ru="Рейтинг">Tulostaulukko</h2>
                 <div id="leaderboard-content"></div>
             </div>
 
             <!-- Settings view -->
             <div id="settings-view" class="view">
-                <h2 data-fi="Asetukset" data-en="Settings">Asetukset</h2>
+                <h2 data-fi="Asetukset" data-en="Settings" data-ru="Настройки">Asetukset</h2>
                 <div id="settings-content"></div>
             </div>
 
             <!-- Vocabulary flashcards view -->
             <div id="vocab-view" class="view">
                 <div class="vocab-header">
-                    <h2 data-fi="Sanasto" data-en="Vocabulary">Sanasto</h2>
-                    <p data-fi="Opi tärkeimmät käsitteet kansalaisuuskokeeseen" data-en="Learn key concepts for the citizenship test">Opi tärkeimmät käsitteet kansalaisuuskokeeseen</p>
+                    <h2 data-fi="Sanasto" data-en="Vocabulary" data-ru="Словарь">Sanasto</h2>
+                    <p data-fi="Opi tärkeimmät käsitteet kansalaisuuskokeeseen" data-en="Learn key concepts for the citizenship test" data-ru="Выучи ключевые понятия для теста на гражданство">Opi tärkeimmät käsitteet kansalaisuuskokeeseen</p>
                     <div id="vocab-stats-bar"></div>
                 </div>
                 <div id="vocab-content"></div>

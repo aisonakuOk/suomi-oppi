@@ -176,7 +176,7 @@ function setAuthLoading(btn, loading) {
   if (loading) {
     btn.disabled = true;
     btn.dataset.origText = btn.textContent;
-    btn.textContent = state.lang === "fi" ? "Odota..." : "Please wait...";
+    btn.textContent = L("Odota...", "Please wait...", "Подождите...");
     btn.style.opacity = "0.7";
   } else {
     btn.disabled = false;
@@ -193,12 +193,12 @@ async function doLogin(e) {
   const password = document.getElementById("login-password").value;
 
   if (!username) {
-    showAuthError(state.lang === "fi" ? "Kirjoita käyttäjänimi" : "Enter your username");
+    showAuthError(L("Kirjoita käyttäjänimi", "Enter your username", "Введите имя пользователя"));
     document.getElementById("login-username").focus();
     return;
   }
   if (!password) {
-    showAuthError(state.lang === "fi" ? "Kirjoita salasana" : "Enter your password");
+    showAuthError(L("Kirjoita salasana", "Enter your password", "Введите пароль"));
     document.getElementById("login-password").focus();
     return;
   }
@@ -215,9 +215,7 @@ async function doLogin(e) {
     enterApp();
   } catch (err) {
     setAuthLoading(btn, false);
-    showAuthError(state.lang === "fi"
-      ? "Väärä käyttäjänimi tai salasana. Yritä uudelleen."
-      : "Wrong username or password. Please try again.");
+    showAuthError(L("Väärä käyttäjänimi tai salasana. Yritä uudelleen.", "Wrong username or password. Please try again.", "Неверное имя пользователя или пароль. Попробуйте снова."));
   }
 }
 
@@ -230,17 +228,17 @@ async function doRegister(e) {
   const password = document.getElementById("reg-password").value;
 
   if (!displayName) {
-    showAuthError(state.lang === "fi" ? "Kirjoita nimesi" : "Enter your name");
+    showAuthError(L("Kirjoita nimesi", "Enter your name", "Введите ваше имя"));
     document.getElementById("reg-display").focus();
     return;
   }
   if (!username || username.length < 3) {
-    showAuthError(state.lang === "fi" ? "Käyttäjänimen pitää olla vähintään 3 merkkiä" : "Username must be at least 3 characters");
+    showAuthError(L("Käyttäjänimen pitää olla vähintään 3 merkkiä", "Username must be at least 3 characters", "Имя пользователя — минимум 3 символа"));
     document.getElementById("reg-username").focus();
     return;
   }
   if (!password || password.length < 6) {
-    showAuthError(state.lang === "fi" ? "Salasanan pitää olla vähintään 6 merkkiä" : "Password must be at least 6 characters");
+    showAuthError(L("Salasanan pitää olla vähintään 6 merkkiä", "Password must be at least 6 characters", "Пароль — минимум 6 символов"));
     document.getElementById("reg-password").focus();
     return;
   }
@@ -262,9 +260,7 @@ async function doRegister(e) {
   } catch (err) {
     setAuthLoading(btn, false);
     if (err.message.includes("already") || err.message.includes("käytössä")) {
-      showAuthError(state.lang === "fi"
-        ? "Tämä käyttäjänimi on jo käytössä. Valitse toinen."
-        : "This username is already taken. Choose another one.");
+      showAuthError(L("Tämä käyttäjänimi on jo käytössä. Valitse toinen.", "This username is already taken. Choose another one.", "Это имя пользователя уже занято. Выберите другое."));
     } else {
       showAuthError(err.message);
     }
@@ -333,9 +329,15 @@ function closeMenuOnOutsideClick(e) {
 }
 
 // ── Language Toggle ──
+const LANGS = ["fi", "en", "ru"];
+const LANG_LABELS = { fi: "FI", en: "EN", ru: "RU" };
+
 function toggleLanguage() {
-  state.lang = state.lang === "fi" ? "en" : "fi";
-  document.getElementById("lang-toggle").classList.toggle("en-active", state.lang === "en");
+  const idx = LANGS.indexOf(state.lang);
+  state.lang = LANGS[(idx + 1) % LANGS.length];
+  const btn = document.getElementById("lang-toggle");
+  btn.textContent = LANG_LABELS[state.lang];
+  btn.classList.toggle("en-active", state.lang !== "fi");
   saveSession();
   if (state.token && !state.isGuest) {
     apiCall("settings", { preferred_lang: state.lang }).catch(() => {});
@@ -346,12 +348,21 @@ function toggleLanguage() {
 function t(obj) {
   if (!obj) return "";
   if (typeof obj === "string") return obj;
-  return obj[state.lang] || obj.fi || "";
+  return obj[state.lang] || obj.en || obj.fi || "";
+}
+
+// Trilingual helper: L("fi text", "en text", "ru text")
+function L(fi, en, ru) {
+  if (state.lang === "ru" && ru) return ru;
+  if (state.lang === "en" && en) return en;
+  return fi;
 }
 
 function updateTranslations() {
   document.querySelectorAll("[data-fi]").forEach(el => {
-    el.textContent = state.lang === "en" ? el.dataset.en : el.dataset.fi;
+    if (state.lang === "ru" && el.dataset.ru) el.textContent = el.dataset.ru;
+    else if (state.lang === "en" && el.dataset.en) el.textContent = el.dataset.en;
+    else el.textContent = el.dataset.fi;
   });
   if (state.currentView === "home") renderHome();
   else if (state.currentView === "module") renderModuleView();
@@ -477,7 +488,7 @@ function renderHome() {
   document.getElementById("overall-progress-fill").style.width =
     totalLessons > 0 ? (completedLessons / totalLessons * 100) + "%" : "0%";
   document.getElementById("overall-progress-text").textContent =
-    `${completedLessons} / ${totalLessons} ${state.lang === "fi" ? "oppituntia suoritettu" : "lessons completed"}`;
+    `${completedLessons} / ${totalLessons} ${L("oppituntia suoritettu", "lessons completed", "уроков пройдено")}`;
 
   // Daily goal banner
   if (state.token || state.isGuest) {
@@ -561,7 +572,7 @@ function renderModuleView() {
     let statusHtml;
     if (isDone) statusHtml = `<span class="lesson-status done">✓</span>`;
     else if (isLocked) statusHtml = `<span class="lesson-status locked-badge">🔒</span>`;
-    else statusHtml = `<span class="lesson-status new">${state.lang === "fi" ? "Aloita" : "Start"}</span>`;
+    else statusHtml = `<span class="lesson-status new">${L("Aloita", "Start", "Начать")}</span>`;
 
     card.innerHTML = `
       <div class="lesson-icon" style="background: ${mod.color}22; color: ${mod.color}">
@@ -569,7 +580,7 @@ function renderModuleView() {
       </div>
       <div class="lesson-info">
         <h3>${t(lesson.title)}</h3>
-        <p>${lesson.exercises.length} ${state.lang === "fi" ? "harjoitusta" : "exercises"}</p>
+        <p>${lesson.exercises.length} ${L("harjoitusta", "exercises", "упражнений")}</p>
       </div>
       ${statusHtml}
     `;
@@ -649,7 +660,7 @@ function renderExercise() {
     const bmBtn = document.createElement("button");
     bmBtn.className = `bookmark-btn ${isBookmarked ? "active" : ""}`;
     bmBtn.innerHTML = isBookmarked ? "🔖" : "🏷️";
-    bmBtn.title = state.lang === "fi" ? "Kirjanmerkki" : "Bookmark";
+    bmBtn.title = L("Kirjanmerkki", "Bookmark", "Закладка");
     bmBtn.onclick = () => toggleBookmark(bmKey, bmBtn);
     container.insertBefore(bmBtn, container.firstChild);
   }
@@ -681,7 +692,7 @@ async function toggleBookmark(key, btn) {
 function renderMultipleChoice(container, ex) {
   const keys = ["A", "B", "C", "D"];
   container.innerHTML += `
-    <div class="exercise-type-label">${state.lang === "fi" ? "Valitse oikea vastaus" : "Choose the correct answer"}</div>
+    <div class="exercise-type-label">${L("Valitse oikea vastaus", "Choose the correct answer", "Выберите правильный ответ")}</div>
     <div class="exercise-question">${t(ex.question)}</div>
     <div class="choices">
       ${ex.choices.map((c, i) => `
@@ -712,11 +723,11 @@ function renderMultipleChoice(container, ex) {
 // ── True/False ──
 function renderTrueFalse(container, ex) {
   container.innerHTML += `
-    <div class="exercise-type-label">${state.lang === "fi" ? "Totta vai tarua?" : "True or false?"}</div>
+    <div class="exercise-type-label">${L("Totta vai tarua?", "True or false?", "Верно или неверно?")}</div>
     <div class="exercise-question">${t(ex.question)}</div>
     <div class="tf-buttons">
-      <button class="tf-btn true-btn" data-value="true">${state.lang === "fi" ? "Totta" : "True"} ✓</button>
-      <button class="tf-btn false-btn" data-value="false">${state.lang === "fi" ? "Tarua" : "False"} ✗</button>
+      <button class="tf-btn true-btn" data-value="true">${L("Totta", "True", "Верно")} ✓</button>
+      <button class="tf-btn false-btn" data-value="false">${L("Tarua", "False", "Неверно")} ✗</button>
     </div>
   `;
 
@@ -743,14 +754,14 @@ function renderFillBlank(container, ex) {
   const sentenceHtml = t(ex.sentence).replace("___", `<span class="blank-slot" id="blank-display"></span>`);
 
   container.innerHTML += `
-    <div class="exercise-type-label">${state.lang === "fi" ? "Täytä puuttuva sana" : "Fill in the missing word"}</div>
+    <div class="exercise-type-label">${L("Täytä puuttuva sana", "Fill in the missing word", "Заполните пропущенное слово")}</div>
     <div class="fill-blank-sentence">${sentenceHtml}</div>
     <input type="text" class="fill-input" id="fill-input"
-           placeholder="${state.lang === "fi" ? "Kirjoita vastaus..." : "Type your answer..."}"
+           placeholder="${L("Kirjoita vastaus...", "Type your answer...", "Введите ответ...")}"
            autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="exercise-actions">
-      <button class="btn btn-skip" id="skip-btn">${state.lang === "fi" ? "Ohita" : "Skip"}</button>
-      <button class="btn btn-primary" id="check-btn">${state.lang === "fi" ? "Tarkista" : "Check"}</button>
+      <button class="btn btn-skip" id="skip-btn">${L("Ohita", "Skip", "Пропустить")}</button>
+      <button class="btn btn-primary" id="check-btn">${L("Tarkista", "Check", "Проверить")}</button>
     </div>
   `;
 
@@ -803,7 +814,7 @@ function renderMatching(container, ex) {
   shuffleArray(rightOrder);
 
   container.innerHTML += `
-    <div class="exercise-type-label">${t(ex.instruction) || (state.lang === "fi" ? "Yhdistä parit" : "Match the pairs")}</div>
+    <div class="exercise-type-label">${t(ex.instruction) || (L("Yhdistä parit", "Match the pairs", "Соедините пары"))}</div>
     <div class="matching-container">
       <div class="match-column match-left">
         ${pairs.map((p, i) => `<div class="match-item match-left-item" data-pair-index="${i}">${t(p.left)}</div>`).join("")}
@@ -887,9 +898,9 @@ function showFeedback(correct, ex) {
   banner.className = `feedback-banner ${correct ? "correct-banner" : "incorrect-banner"}`;
 
   const explanationText = t(ex.explanation);
-  const correctLabel = state.lang === "fi" ? "Oikein!" : "Correct!";
-  const incorrectLabel = state.lang === "fi" ? "Väärin" : "Incorrect";
-  const continueLabel = state.lang === "fi" ? "Jatka" : "Continue";
+  const correctLabel = L("Oikein!", "Correct!", "Правильно!");
+  const incorrectLabel = L("Väärin", "Incorrect", "Неправильно");
+  const continueLabel = L("Jatka", "Continue", "Далее");
 
   banner.innerHTML = `
     <div class="feedback-text">
@@ -940,25 +951,25 @@ async function finishLesson() {
   document.getElementById("complete-stats").innerHTML = `
     <div class="stat-item">
       <div class="stat-value">${xpEarned}</div>
-      <div class="stat-label">XP ${state.lang === "fi" ? "ansaittu" : "earned"}</div>
+      <div class="stat-label">XP ${L("ansaittu", "earned", "заработано")}</div>
     </div>
     <div class="stat-item">
       <div class="stat-value">${accuracy}%</div>
-      <div class="stat-label">${state.lang === "fi" ? "Tarkkuus" : "Accuracy"}</div>
+      <div class="stat-label">${L("Tarkkuus", "Accuracy", "Точность")}</div>
     </div>
     <div class="stat-item">
       <div class="stat-value">${state.correctAnswered}/${state.totalAnswered}</div>
-      <div class="stat-label">${state.lang === "fi" ? "Oikein" : "Correct"}</div>
+      <div class="stat-label">${L("Oikein", "Correct", "Правильно")}</div>
     </div>
   `;
 
   // Build action buttons
   const completeActions = document.getElementById("complete-actions");
   if (completeActions) {
-    let btns = `<button class="btn btn-secondary" onclick="goHome()">${state.lang === "fi" ? "Etusivulle" : "Home"}</button>`;
-    btns += `<button class="btn btn-primary" onclick="goToModule()">${state.lang === "fi" ? "Takaisin moduuliin" : "Back to module"}</button>`;
+    let btns = `<button class="btn btn-secondary" onclick="goHome()">${L("Etusivulle", "Home", "На главную")}</button>`;
+    btns += `<button class="btn btn-primary" onclick="goToModule()">${L("Takaisin moduuliin", "Back to module", "К модулю")}</button>`;
     if (nextLessonId) {
-      btns += `<button class="btn btn-primary" onclick="startLesson('${nextLessonId}')" style="background:var(--blue);box-shadow:0 4px 0 var(--blue-dark);">${state.lang === "fi" ? "Seuraava oppitunti →" : "Next lesson →"}</button>`;
+      btns += `<button class="btn btn-primary" onclick="startLesson('${nextLessonId}')" style="background:var(--blue);box-shadow:0 4px 0 var(--blue-dark);">${L("Seuraava oppitunti →", "Next lesson →", "Следующий урок →")}</button>`;
     }
     completeActions.innerHTML = btns;
   }
@@ -983,7 +994,7 @@ async function finishLesson() {
         achDisplay.innerHTML = newAchievements.map(a => `
           <div class="achievement-card unlocked pop-in" style="display: inline-block; margin: 8px;">
             <div class="ach-icon">${a.icon}</div>
-            <div class="ach-name">${state.lang === "fi" ? a.fi : a.en}</div>
+            <div class="ach-name">${t({fi: a.fi, en: a.en, ru: a.ru || a.en})}</div>
           </div>
         `).join("");
         newAchievements.forEach(a => showAchievementToast(a));
@@ -1018,7 +1029,7 @@ function showAchievementToast(achievement) {
   const toast = document.getElementById("achievement-toast");
   toast.querySelector(".achievement-toast-icon").textContent = achievement.icon;
   toast.querySelector(".achievement-toast-text").textContent =
-    `${state.lang === "fi" ? "Saavutus: " : "Achievement: "}${state.lang === "fi" ? achievement.fi : achievement.en}`;
+    `${L("Saavutus: ", "Achievement: ", "Достижение: ")}${t({fi: achievement.fi, en: achievement.en, ru: achievement.ru || achievement.en})}`;
   toast.classList.remove("hidden");
   setTimeout(() => toast.classList.add("hidden"), 4000);
 }
@@ -1031,16 +1042,16 @@ async function loadStats() {
     content.innerHTML = `
       <div class="stats-grid">
         <div class="stats-card"><div class="stat-value">${state.xp}</div><div class="stat-label">XP</div></div>
-        <div class="stats-card"><div class="stat-value">${state.streak}</div><div class="stat-label">${state.lang === "fi" ? "Putki" : "Streak"}</div></div>
-        <div class="stats-card"><div class="stat-value">${Object.keys(state.completed).length}</div><div class="stat-label">${state.lang === "fi" ? "Oppituntia" : "Lessons"}</div></div>
-        <div class="stats-card"><div class="stat-value">${state.todayXp}</div><div class="stat-label">${state.lang === "fi" ? "Tänään" : "Today"}</div></div>
+        <div class="stats-card"><div class="stat-value">${state.streak}</div><div class="stat-label">${L("Putki", "Streak", "Серия")}</div></div>
+        <div class="stats-card"><div class="stat-value">${Object.keys(state.completed).length}</div><div class="stat-label">${L("Oppituntia", "Lessons", "Уроков")}</div></div>
+        <div class="stats-card"><div class="stat-value">${state.todayXp}</div><div class="stat-label">${L("Tänään", "Today", "Сегодня")}</div></div>
       </div>
-      <p style="text-align:center; color: var(--text-muted); margin-top: 20px;">${state.lang === "fi" ? "Kirjaudu sisään nähdäksesi tarkemmat tilastot" : "Log in to see detailed statistics"}</p>
+      <p style="text-align:center; color: var(--text-muted); margin-top: 20px;">${L("Kirjaudu sisään nähdäksesi tarkemmat tilastot", "Log in to see detailed statistics", "Войдите, чтобы увидеть подробную статистику")}</p>
     `;
     return;
   }
 
-  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${state.lang === "fi" ? "Ladataan..." : "Loading..."}</p>`;
+  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${L("Ladataan...", "Loading...", "Загрузка...")}</p>`;
 
   try {
     const [profile, stats] = await Promise.all([
@@ -1052,24 +1063,24 @@ async function loadStats() {
     content.innerHTML = `
       <div class="stats-grid">
         <div class="stats-card"><div class="stat-value" style="color:var(--gold)">${s.total_xp}</div><div class="stat-label">XP</div></div>
-        <div class="stats-card"><div class="stat-value" style="color:var(--orange)">${s.streak}</div><div class="stat-label">${state.lang === "fi" ? "Putki" : "Streak"}</div></div>
-        <div class="stats-card"><div class="stat-value" style="color:var(--green)">${s.lessons_completed}</div><div class="stat-label">${state.lang === "fi" ? "Oppituntia" : "Lessons"}</div></div>
-        <div class="stats-card"><div class="stat-value" style="color:var(--blue)">${s.accuracy}%</div><div class="stat-label">${state.lang === "fi" ? "Tarkkuus" : "Accuracy"}</div></div>
+        <div class="stats-card"><div class="stat-value" style="color:var(--orange)">${s.streak}</div><div class="stat-label">${L("Putki", "Streak", "Серия")}</div></div>
+        <div class="stats-card"><div class="stat-value" style="color:var(--green)">${s.lessons_completed}</div><div class="stat-label">${L("Oppituntia", "Lessons", "Уроков")}</div></div>
+        <div class="stats-card"><div class="stat-value" style="color:var(--blue)">${s.accuracy}%</div><div class="stat-label">${L("Tarkkuus", "Accuracy", "Точность")}</div></div>
       </div>
 
       <div class="activity-chart">
-        <h3>${state.lang === "fi" ? "Aktiivisuus (30 päivää)" : "Activity (30 days)"}</h3>
+        <h3>${L("Aktiivisuus (30 päivää)", "Activity (30 days)", "Активность (30 дней)")}</h3>
         <div class="heatmap" id="heatmap"></div>
       </div>
 
       ${stats.weak_areas.length > 0 ? `
         <div class="weak-areas">
-          <h3>${state.lang === "fi" ? "Vaikeat alueet" : "Weak areas"}</h3>
+          <h3>${L("Vaikeat alueet", "Weak areas", "Слабые места")}</h3>
           ${stats.weak_areas.map(w => {
             const lessonTitle = findLessonTitle(w.lesson_id);
             return `<div class="weak-item">
               <span>${lessonTitle} #${w.exercise_index + 1}</span>
-              <span class="weak-badge">${w.attempts} ${state.lang === "fi" ? "yritystä" : "attempts"}</span>
+              <span class="weak-badge">${w.attempts} ${L("yritystä", "attempts", "попыток")}</span>
             </div>`;
           }).join("")}
         </div>
@@ -1114,11 +1125,11 @@ async function loadAchievements() {
   const content = document.getElementById("achievements-content");
 
   if (!state.token || state.isGuest) {
-    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${state.lang === "fi" ? "Kirjaudu sisään nähdäksesi saavutukset" : "Log in to see achievements"}</p>`;
+    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${L("Kirjaudu sisään nähdäksesi saavutukset", "Log in to see achievements", "Войдите, чтобы увидеть достижения")}</p>`;
     return;
   }
 
-  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${state.lang === "fi" ? "Ladataan..." : "Loading..."}</p>`;
+  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${L("Ladataan...", "Loading...", "Загрузка...")}</p>`;
 
   try {
     const res = await apiCall("achievements");
@@ -1126,13 +1137,13 @@ async function loadAchievements() {
     const total = res.achievements.length;
 
     content.innerHTML = `
-      <p style="text-align:center; color: var(--text-muted); margin: 10px 0 20px;">${unlocked} / ${total} ${state.lang === "fi" ? "avattu" : "unlocked"}</p>
+      <p style="text-align:center; color: var(--text-muted); margin: 10px 0 20px;">${unlocked} / ${total} ${L("avattu", "unlocked", "открыто")}</p>
       <div class="achievements-grid">
         ${res.achievements.map(a => `
           <div class="achievement-card ${a.unlocked ? "unlocked" : "locked"}">
             <div class="ach-icon">${a.icon}</div>
-            <div class="ach-name">${state.lang === "fi" ? a.fi : a.en}</div>
-            <div class="ach-desc">${state.lang === "fi" ? a.desc_fi : a.desc_en}</div>
+            <div class="ach-name">${t({fi: a.fi, en: a.en, ru: a.ru || a.en})}</div>
+            <div class="ach-desc">${t({fi: a.desc_fi, en: a.desc_en, ru: a.desc_ru || a.desc_en})}</div>
           </div>
         `).join("")}
       </div>
@@ -1147,11 +1158,11 @@ async function loadReview() {
   const content = document.getElementById("review-content");
 
   if (!state.token || state.isGuest) {
-    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${state.lang === "fi" ? "Kirjaudu sisään käyttääksesi kertausta" : "Log in to use review mode"}</p>`;
+    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${L("Kirjaudu sisään käyttääksesi kertausta", "Log in to use review mode", "Войдите для режима повторения")}</p>`;
     return;
   }
 
-  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${state.lang === "fi" ? "Ladataan..." : "Loading..."}</p>`;
+  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${L("Ladataan...", "Loading...", "Загрузка...")}</p>`;
 
   try {
     const res = await apiCall("review");
@@ -1159,7 +1170,7 @@ async function loadReview() {
       content.innerHTML = `
         <div class="review-empty">
           <div class="empty-icon">✨</div>
-          <p>${state.lang === "fi" ? "Ei kertaavia harjoituksia juuri nyt! Jatka uusien oppituntien tekemistä." : "No exercises to review right now! Keep doing new lessons."}</p>
+          <p>${L("Ei kertaavia harjoituksia juuri nyt! Jatka uusien oppituntien tekemistä.", "No exercises to review right now! Keep doing new lessons.", "Нет упражнений для повторения! Продолжайте проходить новые уроки.")}</p>
         </div>
       `;
       return;
@@ -1167,10 +1178,10 @@ async function loadReview() {
 
     content.innerHTML = `
       <p style="text-align:center; margin-bottom: 20px; color: var(--text-muted);">
-        ${res.review_exercises.length} ${state.lang === "fi" ? "harjoitusta kertaattavana" : "exercises to review"}
+        ${res.review_exercises.length} ${L("harjoitusta kertaattavana", "exercises to review", "упражнений для повторения")}
       </p>
       <button class="btn btn-primary btn-full" onclick="startReviewSession()" style="max-width: 300px; margin: 0 auto; display: block;">
-        ${state.lang === "fi" ? "Aloita kertaus" : "Start review"}
+        ${L("Aloita kertaus", "Start review", "Начать повторение")}
       </button>
       <div style="margin-top: 20px;">
         ${res.review_exercises.map(r => {
@@ -1188,7 +1199,11 @@ async function loadReview() {
 }
 
 async function startReviewSession() {
-  if (!state.token || state.isGuest) return;
+  if (!state.token || state.isGuest) {
+    showView("review");
+    loadReview();
+    return;
+  }
 
   try {
     const res = await apiCall("review");
@@ -1227,11 +1242,11 @@ async function loadBookmarks() {
   const content = document.getElementById("bookmarks-content");
 
   if (!state.token || state.isGuest) {
-    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${state.lang === "fi" ? "Kirjaudu sisään käyttääksesi kirjanmerkkejä" : "Log in to use bookmarks"}</p>`;
+    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${L("Kirjaudu sisään käyttääksesi kirjanmerkkejä", "Log in to use bookmarks", "Войдите для использования закладок")}</p>`;
     return;
   }
 
-  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${state.lang === "fi" ? "Ladataan..." : "Loading..."}</p>`;
+  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${L("Ladataan...", "Loading...", "Загрузка...")}</p>`;
 
   try {
     const res = await apiCall("bookmarks");
@@ -1239,7 +1254,7 @@ async function loadBookmarks() {
       content.innerHTML = `
         <div class="review-empty">
           <div class="empty-icon">🔖</div>
-          <p>${state.lang === "fi" ? "Ei kirjanmerkkejä vielä. Lisää niitä harjoituksissa 🏷️-painikkeella." : "No bookmarks yet. Add them using the 🏷️ button during exercises."}</p>
+          <p>${L("Ei kirjanmerkkejä vielä. Lisää niitä harjoituksissa 🏷️-painikkeella.", "No bookmarks yet. Add them using the 🏷️ button during exercises.", "Пока нет закладок. Добавляйте их кнопкой 🏷️ во время упражнений.")}</p>
         </div>
       `;
       return;
@@ -1298,11 +1313,11 @@ async function loadLeaderboard() {
   const content = document.getElementById("leaderboard-content");
 
   if (!state.token || state.isGuest) {
-    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${state.lang === "fi" ? "Kirjaudu sisään nähdäksesi tulostaulukko" : "Log in to see the leaderboard"}</p>`;
+    content.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 40px;">${L("Kirjaudu sisään nähdäksesi tulostaulukko", "Log in to see the leaderboard", "Войдите, чтобы увидеть рейтинг")}</p>`;
     return;
   }
 
-  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${state.lang === "fi" ? "Ladataan..." : "Loading..."}</p>`;
+  content.innerHTML = `<p style="text-align:center; color: var(--text-muted);">${L("Ladataan...", "Loading...", "Загрузка...")}</p>`;
 
   try {
     const res = await apiCall("leaderboard");
@@ -1314,7 +1329,7 @@ async function loadLeaderboard() {
           return `
             <div class="leaderboard-item ${isMe ? "current-user" : ""}">
               <div class="lb-rank ${rankClass}">${i + 1}</div>
-              <div class="lb-name">${l.display_name}${isMe ? " ← " + (state.lang === "fi" ? "sinä" : "you") : ""}</div>
+              <div class="lb-name">${l.display_name}${isMe ? " ← " + (L("sinä", "you", "вы")) : ""}</div>
               <div class="lb-xp">${l.total_xp} XP</div>
             </div>
           `;
@@ -1333,7 +1348,7 @@ function loadSettings() {
 
   content.innerHTML = `
     <div class="settings-section">
-      <h3>${state.lang === "fi" ? "Päivätavoite" : "Daily Goal"}</h3>
+      <h3>${L("Päivätavoite", "Daily Goal", "Дневная цель")}</h3>
       <div class="goal-options">
         ${[20, 50, 100, 150].map(g => `
           <button class="goal-option ${state.dailyGoal === g ? "active" : ""}" onclick="setDailyGoal(${g})">${g} XP</button>
@@ -1343,37 +1358,37 @@ function loadSettings() {
 
     ${isLoggedIn ? `
       <div class="settings-section">
-        <h3>${state.lang === "fi" ? "Profiili" : "Profile"}</h3>
+        <h3>${L("Profiili", "Profile", "Профиль")}</h3>
         <div class="settings-row">
-          <label>${state.lang === "fi" ? "Nimi" : "Name"}</label>
+          <label>${L("Nimi", "Name", "Имя")}</label>
           <input type="text" id="settings-name" value="${state.user.display_name || ""}" placeholder="Display name">
         </div>
         <div class="settings-row">
-          <label>${state.lang === "fi" ? "Uusi salasana" : "New password"}</label>
-          <input type="password" id="settings-password" placeholder="${state.lang === "fi" ? "Jätä tyhjäksi" : "Leave empty"}">
+          <label>${L("Uusi salasana", "New password", "Новый пароль")}</label>
+          <input type="password" id="settings-password" placeholder="${L("Jätä tyhjäksi", "Leave empty", "Оставьте пустым")}">
         </div>
         <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 12px; width: 100%;">
-          ${state.lang === "fi" ? "Tallenna" : "Save"}
+          ${L("Tallenna", "Save", "Сохранить")}
         </button>
       </div>
     ` : `
       <div class="settings-section">
-        <h3>${state.lang === "fi" ? "Tili" : "Account"}</h3>
+        <h3>${L("Tili", "Account", "Аккаунт")}</h3>
         <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">
-          ${state.lang === "fi" ? "Luo tili tallentaaksesi edistymisesi pilveen" : "Create an account to save your progress to the cloud"}
+          ${L("Luo tili tallentaaksesi edistymisesi pilveen", "Create an account to save your progress to the cloud", "Создайте аккаунт, чтобы сохранить прогресс в облаке")}
         </p>
         <button class="btn btn-primary" onclick="doLogout()" style="width: 100%;">
-          ${state.lang === "fi" ? "Kirjaudu / Rekisteröidy" : "Log in / Register"}
+          ${L("Kirjaudu / Rekisteröidy", "Log in / Register", "Войти / Регистрация")}
         </button>
       </div>
     `}
 
     <div class="settings-section">
-      <h3>${state.lang === "fi" ? "Tietoja" : "About"}</h3>
+      <h3>${L("Tietoja", "About", "О приложении")}</h3>
       <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
-        Suomi Oppi — ${state.lang === "fi" ? "Yhteiskuntaorientaation oppimissovellus" : "Society orientation learning app"}<br>
-        ${state.lang === "fi" ? "Sisältö perustuu" : "Content based on"} yhteiskuntaorientaatio.fi<br>
-        ${state.lang === "fi" ? "Tavoitetaso" : "Target level"}: B1
+        Suomi Oppi — ${L("Yhteiskuntaorientaation oppimissovellus", "Society orientation learning app", "Приложение для изучения финского общества")}<br>
+        ${L("Sisältö perustuu", "Content based on", "Содержание основано на")} yhteiskuntaorientaatio.fi<br>
+        ${L("Tavoitetaso", "Target level", "Целевой уровень")}: B1
       </p>
     </div>
   `;
@@ -1433,7 +1448,7 @@ function showTips(lessonId) {
     <div class="tips-container">
       <div class="tips-header">
         <h2>${t(tips.title)}</h2>
-        <p>${state.lang === "fi" ? "Lue teoria ennen harjoituksia" : "Read the theory before exercises"}</p>
+        <p>${L("Lue teoria ennen harjoituksia", "Read the theory before exercises", "Прочитайте теорию перед упражнениями")}</p>
       </div>
       ${tips.sections.map(s => `
         <div class="tip-section">
@@ -1443,7 +1458,7 @@ function showTips(lessonId) {
       `).join("")}
       <div class="tips-actions">
         <button class="btn btn-primary" onclick="startExercisesAfterTips()">
-          ${state.lang === "fi" ? "Aloita harjoitukset" : "Start exercises"} →
+          ${L("Aloita harjoitukset", "Start exercises", "Начать упражнения")} →
         </button>
       </div>
     </div>
@@ -1460,9 +1475,9 @@ function startExercisesAfterTips() {
 function renderReadingComprehension(container, ex) {
   // ex has: passage (text), questions array with choices and correct index
   container.innerHTML += `
-    <div class="exercise-type-label">${state.lang === "fi" ? "Luetunymmärtäminen" : "Reading comprehension"}</div>
+    <div class="exercise-type-label">${L("Luetunymmärtäminen", "Reading comprehension", "Понимание прочитанного")}</div>
     <div class="reading-passage">${t(ex.passage)}</div>
-    <div class="reading-question-label">${state.lang === "fi" ? "Kysymys" : "Question"} ${(ex._qIndex || 0) + 1}</div>
+    <div class="reading-question-label">${L("Kysymys", "Question", "Вопрос")} ${(ex._qIndex || 0) + 1}</div>
     <div class="exercise-question">${t(ex.question)}</div>
     <div class="choices">
       ${ex.choices.map((c, i) => `
@@ -1505,18 +1520,18 @@ function loadVocabView() {
   const statsBar = document.getElementById("vocab-stats-bar");
   const total = VOCABULARY.length;
   statsBar.innerHTML = `
-    <div class="vocab-stat"><div class="dot" style="background:var(--green)"></div> ${state.lang === "fi" ? "Osattu" : "Mastered"}: <span id="vocab-mastered-count">0</span></div>
-    <div class="vocab-stat"><div class="dot" style="background:var(--orange)"></div> ${state.lang === "fi" ? "Opettelut" : "Learning"}: <span id="vocab-learning-count">0</span></div>
-    <div class="vocab-stat"><div class="dot" style="background:var(--gray-400)"></div> ${state.lang === "fi" ? "Uudet" : "New"}: <span id="vocab-new-count">${total}</span></div>
+    <div class="vocab-stat"><div class="dot" style="background:var(--green)"></div> ${L("Osattu", "Mastered", "Освоено")}: <span id="vocab-mastered-count">0</span></div>
+    <div class="vocab-stat"><div class="dot" style="background:var(--orange)"></div> ${L("Opettelut", "Learning", "Учу")}: <span id="vocab-learning-count">0</span></div>
+    <div class="vocab-stat"><div class="dot" style="background:var(--gray-400)"></div> ${L("Uudet", "New", "Новые")}: <span id="vocab-new-count">${total}</span></div>
   `;
 
   let html = `
     <div class="vocab-practice-actions">
       <button class="btn btn-primary" onclick="startVocabPractice('all')" style="flex:1">
-        ${state.lang === "fi" ? "Harjoittele kaikkia" : "Practice all"} (${total})
+        ${L("Harjoittele kaikkia", "Practice all", "Учить все")} (${total})
       </button>
       <button class="btn btn-secondary" onclick="startVocabPractice('due')" style="flex:1">
-        ${state.lang === "fi" ? "Kertaa" : "Review due"}
+        ${L("Kertaa", "Review due", "Повторить")}
       </button>
     </div>
   `;
@@ -1538,7 +1553,7 @@ function loadVocabView() {
           `).join("")}
         </div>
         <button class="btn btn-secondary" onclick="startVocabPractice('module', '${modId}')" style="width:100%; margin-top: 8px;">
-          ${state.lang === "fi" ? "Harjoittele tätä aihetta" : "Practice this topic"}
+          ${L("Harjoittele tätä aihetta", "Practice this topic", "Учить эту тему")}
         </button>
       </div>
     `;
@@ -1550,7 +1565,7 @@ function loadVocabView() {
 function showVocabDetail(wordId) {
   const word = VOCABULARY.find(v => v.id === wordId);
   if (!word) return;
-  alert(`${word.fi} — ${word.en}\n\n${t({fi: word.definition_fi, en: word.definition_en})}\n\n${word.example_fi || ""}`);
+  alert(`${word.fi} — ${state.lang === "ru" ? (word.ru || word.en) : word.en}\n\n${t({fi: word.definition_fi, en: word.definition_en, ru: word.definition_ru || word.definition_en})}\n\n${word.example_fi || ""}`);
 }
 
 function startVocabPractice(mode, moduleId) {
@@ -1584,21 +1599,21 @@ function renderFlashcard() {
       <div class="flashcard" id="current-flashcard">
         <div class="flashcard-face flashcard-front">
           <div class="flashcard-word">${word.fi}</div>
-          <div class="flashcard-hint">${state.lang === "fi" ? "Napauta kääntääksesi" : "Tap to flip"}</div>
+          <div class="flashcard-hint">${L("Napauta kääntääksesi", "Tap to flip", "Нажмите, чтобы перевернуть")}</div>
         </div>
         <div class="flashcard-face flashcard-back">
-          <div class="flashcard-word" style="font-size:20px; color: var(--green);">${word.en}</div>
-          <div class="flashcard-definition">${t({fi: word.definition_fi, en: word.definition_en})}</div>
+          <div class="flashcard-word" style="font-size:20px; color: var(--green);">${state.lang === "ru" ? (word.ru || word.en) : word.en}</div>
+          <div class="flashcard-definition">${t({fi: word.definition_fi, en: word.definition_en, ru: word.definition_ru || word.definition_en})}</div>
           ${word.example_fi ? `<div class="flashcard-example">"${word.example_fi}"</div>` : ""}
         </div>
       </div>
     </div>
     <div class="flashcard-buttons">
       <button class="fc-btn fc-wrong" onclick="rateFlashcard(false)">
-        ${state.lang === "fi" ? "En osannut" : "Didn't know"} ✗
+        ${L("En osannut", "Didn't know", "Не знал(а)")} ✗
       </button>
       <button class="fc-btn fc-correct" onclick="rateFlashcard(true)">
-        ${state.lang === "fi" ? "Osasin" : "Got it"} ✓
+        ${L("Osasin", "Got it", "Знал(а)")} ✓
       </button>
     </div>
   `;
@@ -1631,15 +1646,15 @@ function finishVocabSession() {
   content.innerHTML = `
     <div class="complete-content">
       <div class="complete-icon">📝</div>
-      <h2>${state.lang === "fi" ? "Sanastoharjoitus valmis!" : "Vocabulary practice done!"}</h2>
+      <h2>${L("Sanastoharjoitus valmis!", "Vocabulary practice done!", "Словарная практика завершена!")}</h2>
       <div id="complete-stats" style="display:flex; justify-content:center; gap:32px; margin:24px 0;">
         <div class="stat-item">
           <div class="stat-value">${session.correct}/${session.total}</div>
-          <div class="stat-label">${state.lang === "fi" ? "Oikein" : "Correct"}</div>
+          <div class="stat-label">${L("Oikein", "Correct", "Правильно")}</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">${pct}%</div>
-          <div class="stat-label">${state.lang === "fi" ? "Tarkkuus" : "Accuracy"}</div>
+          <div class="stat-label">${L("Tarkkuus", "Accuracy", "Точность")}</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">+${xp}</div>
@@ -1647,7 +1662,7 @@ function finishVocabSession() {
         </div>
       </div>
       <button class="btn btn-primary" onclick="showView('vocab')">
-        ${state.lang === "fi" ? "Takaisin sanastoon" : "Back to vocabulary"}
+        ${L("Takaisin sanastoon", "Back to vocabulary", "Назад к словарю")}
       </button>
     </div>
   `;
@@ -1658,19 +1673,19 @@ function showPracticeTestIntro() {
   const content = document.getElementById("practice-test-content");
   content.innerHTML = `
     <div class="test-intro">
-      <h2>${state.lang === "fi" ? "Harjoituskoe" : "Practice Test"}</h2>
+      <h2>${L("Harjoituskoe", "Practice Test", "Пробный тест")}</h2>
       <p>${state.lang === "fi"
         ? "Testaa tietosi suomalaisesta yhteiskunnasta. Koe simuloi kansalaisuustestin kysymyksiä kaikilta aihealueilta."
         : "Test your knowledge of Finnish society. The test simulates citizenship test questions from all topics."}</p>
       <div class="test-info">
-        <strong>${state.lang === "fi" ? "Kokeen tiedot:" : "Test info:"}</strong><br>
-        • ${state.lang === "fi" ? "30 kysymystä kaikilta aihealueilta" : "30 questions from all topics"}<br>
-        • ${state.lang === "fi" ? "Aikaraja: 30 minuuttia" : "Time limit: 30 minutes"}<br>
-        • ${state.lang === "fi" ? "Läpäisy: 70 % oikein" : "Pass: 70% correct"}<br>
-        • ${state.lang === "fi" ? "Sisältää monivalinta-, totta/tarua- ja luetunymmärtämistehtäviä" : "Includes multiple choice, true/false, and reading comprehension"}
+        <strong>${L("Kokeen tiedot:", "Test info:", "Информация о тесте:")}</strong><br>
+        • ${L("30 kysymystä kaikilta aihealueilta", "30 questions from all topics", "30 вопросов по всем темам")}<br>
+        • ${L("Aikaraja: 30 minuuttia", "Time limit: 30 minutes", "Ограничение по времени: 30 минут")}<br>
+        • ${L("Läpäisy: 70 % oikein", "Pass: 70% correct", "Для сдачи: 70% правильных")}<br>
+        • ${L("Sisältää monivalinta-, totta/tarua- ja luetunymmärtämistehtäviä", "Includes multiple choice, true/false, and reading comprehension", "Включает задания с выбором ответа, верно/неверно и на понимание текста")}
       </div>
       <button class="btn btn-primary btn-full" onclick="startPracticeTest()" style="max-width: 300px; margin-top: 16px;">
-        ${state.lang === "fi" ? "Aloita koe" : "Start test"}
+        ${L("Aloita koe", "Start test", "Начать тест")}
       </button>
     </div>
   `;
@@ -1830,19 +1845,19 @@ async function finishPracticeTest() {
   content.innerHTML = `
     <div class="test-results">
       <h2>${passed
-        ? (state.lang === "fi" ? "Läpäisit kokeen!" : "You passed!")
-        : (state.lang === "fi" ? "Et läpäissyt vielä" : "Not passed yet")}</h2>
+        ? (L("Läpäisit kokeen!", "You passed!", "Вы сдали тест!"))
+        : (L("Et läpäissyt vielä", "Not passed yet", "Пока не сдано"))}</h2>
       <div class="test-score-circle ${passed ? "pass" : "fail"}">
         <div class="test-score-number">${score}%</div>
         <div class="test-score-label">${correct}/${total}</div>
       </div>
       <p style="color: var(--text-muted); margin: 10px 0;">
-        ${state.lang === "fi" ? "Aika" : "Time"}: ${mins}:${secs.toString().padStart(2, "0")} |
-        ${state.lang === "fi" ? "Läpäisyraja" : "Pass threshold"}: 70%
+        ${L("Aika", "Time", "Время")}: ${mins}:${secs.toString().padStart(2, "0")} |
+        ${L("Läpäisyraja", "Pass threshold", "Порог сдачи")}: 70%
       </p>
 
       <div class="test-module-breakdown">
-        <h3 style="font-size:15px; margin-bottom:10px;">${state.lang === "fi" ? "Tulokset aiheittain" : "Results by topic"}</h3>
+        <h3 style="font-size:15px; margin-bottom:10px;">${L("Tulokset aiheittain", "Results by topic", "Результаты по темам")}</h3>
         ${Object.entries(moduleScores).map(([modId, ms]) => {
           const mod = MODULES.find(m => m.id === modId);
           const modTitle = mod ? t(mod.title) : modId;
@@ -1862,10 +1877,10 @@ async function finishPracticeTest() {
 
       <div style="display:flex; gap:12px; margin-top:20px;">
         <button class="btn btn-secondary" onclick="goHome()" style="flex:1">
-          ${state.lang === "fi" ? "Etusivulle" : "Home"}
+          ${L("Etusivulle", "Home", "На главную")}
         </button>
         <button class="btn btn-primary" onclick="showPracticeTestIntro()" style="flex:1">
-          ${state.lang === "fi" ? "Yritä uudelleen" : "Try again"}
+          ${L("Yritä uudelleen", "Try again", "Попробовать снова")}
         </button>
       </div>
     </div>

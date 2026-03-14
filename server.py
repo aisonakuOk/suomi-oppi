@@ -22,13 +22,12 @@ USE_PG = bool(DATABASE_URL)
 # ── Database Abstraction ──
 
 if USE_PG:
-    import psycopg2
-    import psycopg2.extras
+    import psycopg
+    from psycopg.rows import dict_row
 
 def get_db():
     if USE_PG:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = False
+        conn = psycopg.connect(DATABASE_URL, row_factory=dict_row, autocommit=False)
         return conn
     else:
         db_path = Path(os.environ.get("DB_PATH", str(Path(__file__).parent / "suomioppi.db")))
@@ -43,14 +42,8 @@ def db_execute(conn, sql, params=()):
     if USE_PG:
         # Convert ? placeholders to %s
         sql = sql.replace("?", "%s")
-        # Convert SQLite functions to PostgreSQL
-        sql = sql.replace("datetime('now')", "NOW()")
-        sql = sql.replace("datetime('now',", "(NOW() +")
-        sql = sql.replace("'+' || ", "'")
-        sql = sql.replace(" || ' days')", " days'::interval)")
         sql = sql.replace("INSERT OR IGNORE", "INSERT")
-        sql = sql.replace("COALESCE(SUM(attempts)-COUNT(*),0)", "COALESCE(SUM(attempts)-COUNT(*)::bigint,0)")
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor()
     else:
         cur = conn.cursor()
     cur.execute(sql, params)

@@ -668,13 +668,16 @@ body {
 .btn-full { width: 100%; margin-top: 4px; }
 
 .auth-error {
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: rgba(255,75,75,0.1);
-    border: 1px solid rgba(255,75,75,0.3);
-    border-radius: 10px;
-    color: var(--red);
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    background: rgba(255,75,75,0.12);
+    border: 2px solid rgba(255,75,75,0.4);
+    border-radius: 12px;
+    color: #ff6b6b;
     font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    animation: shake 0.4s;
 }
 
 .btn-link {
@@ -688,6 +691,43 @@ body {
     text-decoration: underline;
 }
 .btn-link:hover { color: var(--text); }
+
+.input-group { text-align: left; }
+.input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.input-hint { font-weight: 400; opacity: 0.7; }
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 14px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.auth-divider::before, .auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+}
+
+/* Complete screen actions */
+.complete-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+}
+.complete-actions .btn {
+    min-width: 140px;
+}
 
 /* ===== User Menu ===== */
 .dropdown-menu {

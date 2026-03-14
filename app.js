@@ -158,40 +158,101 @@ function switchAuthTab(tab) {
   event.target.classList.add("active");
   document.getElementById("login-form").classList.toggle("hidden", tab !== "login");
   document.getElementById("register-form").classList.toggle("hidden", tab !== "register");
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  const errEl = document.getElementById("auth-error");
+  errEl.textContent = msg;
+  errEl.classList.remove("hidden");
+  errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function hideAuthError() {
   document.getElementById("auth-error").classList.add("hidden");
+}
+
+function setAuthLoading(btn, loading) {
+  if (loading) {
+    btn.disabled = true;
+    btn.dataset.origText = btn.textContent;
+    btn.textContent = state.lang === "fi" ? "Odota..." : "Please wait...";
+    btn.style.opacity = "0.7";
+  } else {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.origText || btn.textContent;
+    btn.style.opacity = "";
+  }
 }
 
 async function doLogin(e) {
   e.preventDefault();
-  const errEl = document.getElementById("auth-error");
-  errEl.classList.add("hidden");
+  hideAuthError();
+
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value;
+
+  if (!username) {
+    showAuthError(state.lang === "fi" ? "Kirjoita käyttäjänimi" : "Enter your username");
+    document.getElementById("login-username").focus();
+    return;
+  }
+  if (!password) {
+    showAuthError(state.lang === "fi" ? "Kirjoita salasana" : "Enter your password");
+    document.getElementById("login-password").focus();
+    return;
+  }
+
+  const btn = e.target.querySelector("button[type=submit]");
+  setAuthLoading(btn, true);
 
   try {
-    const res = await apiCall("login", {
-      username: document.getElementById("login-username").value,
-      password: document.getElementById("login-password").value
-    });
+    const res = await apiCall("login", { username, password });
     state.token = res.token;
     state.user = res.user;
     state.isGuest = false;
     saveSession();
     enterApp();
   } catch (err) {
-    errEl.textContent = err.message;
-    errEl.classList.remove("hidden");
+    setAuthLoading(btn, false);
+    showAuthError(state.lang === "fi"
+      ? "Väärä käyttäjänimi tai salasana. Yritä uudelleen."
+      : "Wrong username or password. Please try again.");
   }
 }
 
 async function doRegister(e) {
   e.preventDefault();
-  const errEl = document.getElementById("auth-error");
-  errEl.classList.add("hidden");
+  hideAuthError();
+
+  const displayName = document.getElementById("reg-display").value.trim();
+  const username = document.getElementById("reg-username").value.trim();
+  const password = document.getElementById("reg-password").value;
+
+  if (!displayName) {
+    showAuthError(state.lang === "fi" ? "Kirjoita nimesi" : "Enter your name");
+    document.getElementById("reg-display").focus();
+    return;
+  }
+  if (!username || username.length < 3) {
+    showAuthError(state.lang === "fi" ? "Käyttäjänimen pitää olla vähintään 3 merkkiä" : "Username must be at least 3 characters");
+    document.getElementById("reg-username").focus();
+    return;
+  }
+  if (!password || password.length < 6) {
+    showAuthError(state.lang === "fi" ? "Salasanan pitää olla vähintään 6 merkkiä" : "Password must be at least 6 characters");
+    document.getElementById("reg-password").focus();
+    return;
+  }
+
+  const btn = e.target.querySelector("button[type=submit]");
+  setAuthLoading(btn, true);
 
   try {
     const res = await apiCall("register", {
-      display_name: document.getElementById("reg-display").value,
-      username: document.getElementById("reg-username").value,
-      password: document.getElementById("reg-password").value
+      display_name: displayName,
+      username: username,
+      password: password
     });
     state.token = res.token;
     state.user = res.user;
@@ -199,8 +260,14 @@ async function doRegister(e) {
     saveSession();
     enterApp();
   } catch (err) {
-    errEl.textContent = err.message;
-    errEl.classList.remove("hidden");
+    setAuthLoading(btn, false);
+    if (err.message.includes("already") || err.message.includes("käytössä")) {
+      showAuthError(state.lang === "fi"
+        ? "Tämä käyttäjänimi on jo käytössä. Valitse toinen."
+        : "This username is already taken. Choose another one.");
+    } else {
+      showAuthError(err.message);
+    }
   }
 }
 
@@ -289,6 +356,8 @@ function updateTranslations() {
   if (state.currentView === "home") renderHome();
   else if (state.currentView === "module") renderModuleView();
   else if (state.currentView === "lesson") renderExercise();
+  else if (state.currentView === "tips" && state.currentLessonId) showTips(state.currentLessonId);
+  else if (state.currentView === "vocab") loadVocabView();
 }
 
 // ── Navigation ──
@@ -857,46 +926,17 @@ async function finishLesson() {
 
   document.getElementById("lesson-progress-fill").style.width = "100%";
 
-  let newAchievements = [];
-
-  if (state.token && !state.isGuest) {
-    try {
-      const res = await apiCall("save-progress", {
-        lesson_id: state.currentLessonId,
-        score: state.score,
-        accuracy: accuracy,
-        time_spent: timeSpent,
-        xp_earned: xpEarned,
-        exercise_results: state.exerciseResults
-      });
-      newAchievements = res.new_achievements || [];
-
-      // Refresh profile
-      const profile = await apiCall("profile");
-      state.xp = profile.stats.total_xp;
-      state.streak = profile.stats.streak;
-      state.todayXp = profile.stats.today_xp;
-    } catch (e) {
-      console.error("Failed to save progress:", e);
+  // Find next lesson
+  let nextLessonId = null;
+  for (const mod of MODULES) {
+    const lessonIdx = mod.lessons.findIndex(l => l.id === state.currentLessonId);
+    if (lessonIdx >= 0 && lessonIdx < mod.lessons.length - 1) {
+      nextLessonId = mod.lessons[lessonIdx + 1].id;
+      break;
     }
-  } else {
-    // Guest mode
-    const today = new Date().toDateString();
-    if (state.lastActiveDate !== today) {
-      if (state.lastActiveDate) {
-        const diff = Math.floor((new Date(today) - new Date(state.lastActiveDate)) / 86400000);
-        if (diff === 1) state.streak++;
-        else if (diff > 1) state.streak = 1;
-      } else {
-        state.streak = 1;
-      }
-    }
-    state.lastActiveDate = today;
-    saveGuestState();
   }
 
-  updateTopBar();
-
+  // Show complete screen IMMEDIATELY
   document.getElementById("complete-stats").innerHTML = `
     <div class="stat-item">
       <div class="stat-value">${xpEarned}</div>
@@ -912,21 +952,65 @@ async function finishLesson() {
     </div>
   `;
 
-  // Show new achievements
-  const achDisplay = document.getElementById("new-achievements-display");
-  if (newAchievements.length > 0) {
-    achDisplay.innerHTML = newAchievements.map(a => `
-      <div class="achievement-card unlocked pop-in" style="display: inline-block; margin: 8px;">
-        <div class="ach-icon">${a.icon}</div>
-        <div class="ach-name">${state.lang === "fi" ? a.fi : a.en}</div>
-      </div>
-    `).join("");
-    newAchievements.forEach(a => showAchievementToast(a));
-  } else {
-    achDisplay.innerHTML = "";
+  // Build action buttons
+  const completeActions = document.getElementById("complete-actions");
+  if (completeActions) {
+    let btns = `<button class="btn btn-secondary" onclick="goHome()">${state.lang === "fi" ? "Etusivulle" : "Home"}</button>`;
+    btns += `<button class="btn btn-primary" onclick="goToModule()">${state.lang === "fi" ? "Takaisin moduuliin" : "Back to module"}</button>`;
+    if (nextLessonId) {
+      btns += `<button class="btn btn-primary" onclick="startLesson('${nextLessonId}')" style="background:var(--blue);box-shadow:0 4px 0 var(--blue-dark);">${state.lang === "fi" ? "Seuraava oppitunti →" : "Next lesson →"}</button>`;
+    }
+    completeActions.innerHTML = btns;
   }
 
+  document.getElementById("new-achievements-display").innerHTML = "";
   showView("complete");
+  updateTopBar();
+
+  // Save progress in background (non-blocking)
+  if (state.token && !state.isGuest) {
+    apiCall("save-progress", {
+      lesson_id: state.currentLessonId,
+      score: state.score,
+      accuracy: accuracy,
+      time_spent: timeSpent,
+      xp_earned: xpEarned,
+      exercise_results: state.exerciseResults
+    }).then(res => {
+      const newAchievements = res.new_achievements || [];
+      if (newAchievements.length > 0) {
+        const achDisplay = document.getElementById("new-achievements-display");
+        achDisplay.innerHTML = newAchievements.map(a => `
+          <div class="achievement-card unlocked pop-in" style="display: inline-block; margin: 8px;">
+            <div class="ach-icon">${a.icon}</div>
+            <div class="ach-name">${state.lang === "fi" ? a.fi : a.en}</div>
+          </div>
+        `).join("");
+        newAchievements.forEach(a => showAchievementToast(a));
+      }
+      // Refresh stats silently
+      return apiCall("profile");
+    }).then(profile => {
+      state.xp = profile.stats.total_xp;
+      state.streak = profile.stats.streak;
+      state.todayXp = profile.stats.today_xp;
+      updateTopBar();
+    }).catch(e => console.error("Failed to save progress:", e));
+  } else {
+    // Guest mode
+    const today = new Date().toDateString();
+    if (state.lastActiveDate !== today) {
+      if (state.lastActiveDate) {
+        const diff = Math.floor((new Date(today) - new Date(state.lastActiveDate)) / 86400000);
+        if (diff === 1) state.streak++;
+        else if (diff > 1) state.streak = 1;
+      } else {
+        state.streak = 1;
+      }
+    }
+    state.lastActiveDate = today;
+    saveGuestState();
+  }
 }
 
 // ── Achievement Toast ──

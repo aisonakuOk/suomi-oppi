@@ -63,22 +63,38 @@
                         <button class="auth-tab" onclick="switchAuthTab('register')" data-fi="Rekisteröidy" data-en="Register">Rekisteröidy</button>
                     </div>
 
+                    <div id="auth-error" class="auth-error hidden"></div>
+
                     <form id="login-form" class="auth-form" onsubmit="doLogin(event)">
-                        <input type="text" id="login-username" placeholder="Käyttäjänimi / Username" required autocomplete="username">
-                        <input type="password" id="login-password" placeholder="Salasana / Password" required autocomplete="current-password">
-                        <button type="submit" class="btn btn-primary btn-full" data-fi="Kirjaudu sisään" data-en="Log in">Kirjaudu sisään</button>
+                        <div class="input-group">
+                            <label for="login-username">Käyttäjänimi / Username</label>
+                            <input type="text" id="login-username" placeholder="esim. matti123" required autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <label for="login-password">Salasana / Password</label>
+                            <input type="password" id="login-password" placeholder="********" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Kirjaudu sisään / Log in</button>
                     </form>
 
                     <form id="register-form" class="auth-form hidden" onsubmit="doRegister(event)">
-                        <input type="text" id="reg-display" placeholder="Nimi / Display name" required>
-                        <input type="text" id="reg-username" placeholder="Käyttäjänimi / Username (min 3)" required minlength="3" autocomplete="username">
-                        <input type="password" id="reg-password" placeholder="Salasana / Password (min 6)" required minlength="6" autocomplete="new-password">
-                        <button type="submit" class="btn btn-primary btn-full" data-fi="Luo tili" data-en="Create account">Luo tili</button>
+                        <div class="input-group">
+                            <label for="reg-display">Nimi / Your name</label>
+                            <input type="text" id="reg-display" placeholder="esim. Matti Meikäläinen" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-username">Käyttäjänimi / Username <span class="input-hint">(vähintään 3 merkkiä)</span></label>
+                            <input type="text" id="reg-username" placeholder="esim. matti123" required minlength="3" autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-password">Salasana / Password <span class="input-hint">(vähintään 6 merkkiä)</span></label>
+                            <input type="password" id="reg-password" placeholder="********" required minlength="6" autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Luo tili / Create account</button>
                     </form>
 
-                    <div id="auth-error" class="auth-error hidden"></div>
-
-                    <button class="btn-link" onclick="skipAuth()" data-fi="Jatka ilman tiliä" data-en="Continue without account">Jatka ilman tiliä</button>
+                    <div class="auth-divider"><span>tai / or</span></div>
+                    <button class="btn btn-secondary btn-full" onclick="skipAuth()" style="margin-top:0">Jatka ilman tiliä / Continue without account</button>
                 </div>
             </div>
 
@@ -156,7 +172,7 @@
                     <h2 data-fi="Hienoa!" data-en="Great job!">Hienoa!</h2>
                     <div id="complete-stats"></div>
                     <div id="new-achievements-display"></div>
-                    <button class="btn btn-primary" onclick="goToModule()" data-fi="Jatka" data-en="Continue">Jatka</button>
+                    <div id="complete-actions" class="complete-actions"></div>
                 </div>
             </div>
 
